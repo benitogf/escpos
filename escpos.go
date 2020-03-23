@@ -89,7 +89,7 @@ func New(dst io.ReadWriter) (e *Escpos) {
 // write raw bytes to printer
 func (e *Escpos) WriteRaw(data []byte) (n int, err error) {
 	if len(data) > 0 {
-		log.Printf("Writing %d bytes\n", len(data))
+		// log.Printf("Writing %d bytes\n", len(data))
 		e.dst.Write(data)
 	} else {
 		log.Printf("Wrote NO bytes\n")
