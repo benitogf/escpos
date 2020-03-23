@@ -111,7 +111,7 @@ func (e *Escpos) Write(data string) (int, error) {
 // init/reset printer settings
 func (e *Escpos) Init() {
 	e.reset()
-	e.Write("\x1B@")
+	e.Write("\x1B")
 }
 
 // end output
