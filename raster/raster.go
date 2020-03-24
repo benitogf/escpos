@@ -49,6 +49,7 @@ func (c *Converter) ToRaster(img image.Image) (data []byte, imageWidth, bytesWid
 				// line_start is y * bytesWidth
 				// then 8 bits per byte
 				data[y*bytesWidth+x/8] |= 0x80 >> uint(x%8)
+				// data[y*bytesWidth+x/8] |= 0x00 >> uint(x%8)
 			}
 		}
 	}
@@ -62,6 +63,7 @@ const (
 
 func lightness(c color.Color) float64 {
 	r, g, b, _ := c.RGBA()
+	rw, gw, bw, _ := color.White.RGBA()
 
-	return float64(lumR*r+lumG*g+lumB*b) / float64(0xffff*(lumR+lumG+lumB))
+	return float64((rw + gw + bw) - (r + g + b))
 }
