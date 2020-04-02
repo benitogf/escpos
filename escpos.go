@@ -10,13 +10,13 @@ import (
 )
 
 const (
-	// ASCII DLE (DataLinkEscape)
+	// DLE ASCII DLE (DataLinkEscape)
 	DLE byte = 0x10
 
-	// ASCII EOT (EndOfTransmission)
+	// EOT ASCII EOT (EndOfTransmission)
 	EOT byte = 0x04
 
-	// ASCII GS (Group Separator)
+	// GS ASCII GS (Group Separator)
 	GS byte = 0x1D
 )
 
@@ -48,6 +48,7 @@ func textReplace(data string) string {
 	return data
 }
 
+// Escpos container
 type Escpos struct {
 	// destination
 	dst io.ReadWriter
@@ -79,14 +80,14 @@ func (e *Escpos) reset() {
 	e.smooth = 0
 }
 
-// create Escpos printer
+// New create Escpos printer
 func New(dst io.ReadWriter) (e *Escpos) {
 	e = &Escpos{dst: dst}
 	e.reset()
 	return
 }
 
-// write raw bytes to printer
+// WriteRaw write raw bytes to printer
 func (e *Escpos) WriteRaw(data []byte) (n int, err error) {
 	if len(data) > 0 {
 		// log.Printf("Writing %d bytes\n", len(data))
@@ -98,7 +99,7 @@ func (e *Escpos) WriteRaw(data []byte) (n int, err error) {
 	return 0, nil
 }
 
-// read raw bytes from printer
+// ReadRaw read raw bytes from printer
 func (e *Escpos) ReadRaw(data []byte) (n int, err error) {
 	return e.dst.Read(data)
 }
@@ -108,48 +109,48 @@ func (e *Escpos) Write(data string) (int, error) {
 	return e.WriteRaw([]byte(data))
 }
 
-// init/reset printer settings
+// Init init/reset printer settings
 func (e *Escpos) Init() {
 	e.reset()
 	e.Write("\x1B")
 }
 
-// end output
+// End end output
 func (e *Escpos) End() {
 	e.Write("\xFA")
 }
 
-// send cut
+// Cut send cut
 func (e *Escpos) Cut() {
 	e.Write("\x1DVA0")
 }
 
-// send cut minus one point (partial cut)
+// CutPartial send cut minus one point (partial cut)
 func (e *Escpos) CutPartial() {
 	e.WriteRaw([]byte{GS, 0x56, 1})
 }
 
-// send cash
+// Cash send cash
 func (e *Escpos) Cash() {
 	e.Write("\x1B\x70\x00\x0A\xFF")
 }
 
-// send linefeed
+// Linefeed send linefeed
 func (e *Escpos) Linefeed() {
 	e.Write("\n")
 }
 
-// send N formfeeds
+// FormfeedN send N formfeeds
 func (e *Escpos) FormfeedN(n int) {
 	e.Write(fmt.Sprintf("\x1Bd%c", n))
 }
 
-// send formfeed
+// Formfeed send formfeed
 func (e *Escpos) Formfeed() {
 	e.FormfeedN(1)
 }
 
-// set font
+// SetFont set font
 func (e *Escpos) SetFont(font string) {
 	f := 0
 
@@ -168,11 +169,12 @@ func (e *Escpos) SetFont(font string) {
 	e.Write(fmt.Sprintf("\x1BM%c", f))
 }
 
+// SendFontSize sent font size
 func (e *Escpos) SendFontSize() {
 	e.Write(fmt.Sprintf("\x1D!%c", ((e.width-1)<<4)|(e.height-1)))
 }
 
-// set font size
+// SetFontSize set font size
 func (e *Escpos) SetFontSize(width, height uint8) {
 	if width > 0 && height > 0 && width <= 8 && height <= 8 {
 		e.width = width
@@ -183,89 +185,89 @@ func (e *Escpos) SetFontSize(width, height uint8) {
 	}
 }
 
-// send underline
+// SendUnderline send underline
 func (e *Escpos) SendUnderline() {
 	e.Write(fmt.Sprintf("\x1B-%c", e.underline))
 }
 
-// send emphasize / doublestrike
+// SendEmphasize send emphasize / doublestrike
 func (e *Escpos) SendEmphasize() {
 	e.Write(fmt.Sprintf("\x1BG%c", e.emphasize))
 }
 
-// send upsidedown
+// SendUpsidedown send upsidedown
 func (e *Escpos) SendUpsidedown() {
 	e.Write(fmt.Sprintf("\x1B{%c", e.upsidedown))
 }
 
-// send rotate
+// SendRotate send rotate
 func (e *Escpos) SendRotate() {
 	e.Write(fmt.Sprintf("\x1BR%c", e.rotate))
 }
 
-// send reverse
+// SendReverse send reverse
 func (e *Escpos) SendReverse() {
 	e.Write(fmt.Sprintf("\x1DB%c", e.reverse))
 }
 
-// send smooth
+// SendSmooth send smooth
 func (e *Escpos) SendSmooth() {
 	e.Write(fmt.Sprintf("\x1Db%c", e.smooth))
 }
 
-// send move x
+// SendMoveX send move x
 func (e *Escpos) SendMoveX(x uint16) {
 	e.Write(string([]byte{0x1b, 0x24, byte(x % 256), byte(x / 256)}))
 }
 
-// send move y
+// SendMoveY send move y
 func (e *Escpos) SendMoveY(y uint16) {
 	e.Write(string([]byte{0x1d, 0x24, byte(y % 256), byte(y / 256)}))
 }
 
-// set underline
+// SetUnderline set underline
 func (e *Escpos) SetUnderline(v uint8) {
 	e.underline = v
 	e.SendUnderline()
 }
 
-// set emphasize
+// SetEmphasize set emphasize
 func (e *Escpos) SetEmphasize(u uint8) {
 	e.emphasize = u
 	e.SendEmphasize()
 }
 
-// set upsidedown
+// SetUpsidedown set upsidedown
 func (e *Escpos) SetUpsidedown(v uint8) {
 	e.upsidedown = v
 	e.SendUpsidedown()
 }
 
-// set rotate
+// SetRotate set rotate
 func (e *Escpos) SetRotate(v uint8) {
 	e.rotate = v
 	e.SendRotate()
 }
 
-// set reverse
+// SetReverse set reverse
 func (e *Escpos) SetReverse(v uint8) {
 	e.reverse = v
 	e.SendReverse()
 }
 
-// set smooth
+// SetSmooth set smooth
 func (e *Escpos) SetSmooth(v uint8) {
 	e.smooth = v
 	e.SendSmooth()
 }
 
-// pulse (open the drawer)
+// Pulse pulse (open the drawer)
 func (e *Escpos) Pulse() {
 	// with t=2 -- meaning 2*2msec
 	e.Write("\x1Bp\x02")
 }
 
-// set alignment
+// SetAlign set alignment
 func (e *Escpos) SetAlign(align string) {
 	a := 0
 	switch align {
@@ -281,7 +283,7 @@ func (e *Escpos) SetAlign(align string) {
 	e.Write(fmt.Sprintf("\x1Ba%c", a))
 }
 
-// set language -- ESC R
+// SetLang set language -- ESC R
 func (e *Escpos) SetLang(lang string) {
 	l := 0
 
@@ -312,7 +314,7 @@ func (e *Escpos) SetLang(lang string) {
 	e.Write(fmt.Sprintf("\x1BR%c", l))
 }
 
-// do a block of text
+// Text do a block of text
 func (e *Escpos) Text(params map[string]string, data string) {
 
 	// send alignment to printer
@@ -408,7 +410,7 @@ func (e *Escpos) Text(params map[string]string, data string) {
 	}
 }
 
-// feed the printer
+// Feed feed the printer
 func (e *Escpos) Feed(params map[string]string) {
 	// handle lines (form feed X lines)
 	if l, ok := params["line"]; ok {
@@ -445,7 +447,7 @@ func (e *Escpos) Feed(params map[string]string) {
 	e.SendUnderline()
 }
 
-// feed and cut based on parameters
+// FeedAndCut feed and cut based on parameters
 func (e *Escpos) FeedAndCut(params map[string]string) {
 	if t, ok := params["type"]; ok && t == "feed" {
 		e.Formfeed()
@@ -496,7 +498,7 @@ func (e *Escpos) gSend(m byte, fn byte, data []byte) {
 	e.WriteRaw(data)
 }
 
-// write an image
+// Image write an image
 func (e *Escpos) Image(params map[string]string, data string) {
 	// send alignment to printer
 	if align, ok := params["align"]; ok {
@@ -556,7 +558,7 @@ func (e *Escpos) Image(params map[string]string, data string) {
 
 }
 
-// write a "node" to the printer
+// WriteNode write a "node" to the printer
 func (e *Escpos) WriteNode(name string, params map[string]string, data string) {
 	cstr := ""
 	if data != "" {
